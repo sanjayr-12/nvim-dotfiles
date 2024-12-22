@@ -49,8 +49,73 @@ nnoremap <C-y> <C-r>
 inoremap <C-y> <C-o><C-r>
 vnoremap <C-y> <C-r>
 
-" Auto-save when leaving Insert mode or after a delay
-autocmd InsertLeave,TextChanged * silent! write
+" Custom function to create a new file in NERDTree
+function! NERDTreeCreateFile()
+  let l:node = g:NERDTreeFileNode.GetSelected()
+  if !empty(l:node)
+    let l:dir = l:node.path.str()
+  else
+    let l:dir = getcwd()
+  endif
+  let l:file = input("Create file: ", l:dir . "/", "file")
+  if !empty(l:file)
+    call system("touch " . shellescape(l:file))
+    echo "Created file: " . l:file
+    NERDTreeRefreshRoot
+  endif
+endfunction
+
+" Custom function to create a new directory in NERDTree
+function! NERDTreeCreateDir()
+  let l:node = g:NERDTreeFileNode.GetSelected()
+  if !empty(l:node)
+    let l:dir = l:node.path.str()
+  else
+    let l:dir = getcwd()
+  endif
+  let l:dir_name = input("Create directory: ", l:dir . "/", "file")
+  if !empty(l:dir_name)
+    call system("mkdir -p " . shellescape(l:dir_name))
+    echo "Created directory: " . l:dir_name
+    NERDTreeRefreshRoot
+  endif
+endfunction
+
+" Keybindings for file and folder creation in NERDTree
+autocmd FileType nerdtree nmap <buffer> c :call NERDTreeCreateFile()<CR>
+autocmd FileType nerdtree nmap <buffer> C :call NERDTreeCreateDir()<CR>
+
+
+" Custom function to delete a file or directory in NERDTree
+function! NERDTreeDeleteNode()
+  let l:node = g:NERDTreeFileNode.GetSelected()
+  if empty(l:node)
+    echo "No file or directory selected!"
+    return
+  endif
+
+  let l:path = l:node.path.str()
+  let l:is_directory = l:node.isDirectory
+  let l:message = "Are you sure you want to delete '" . l:path . "'? (y/n): "
+  
+  " Prompt the user for confirmation
+  let l:confirm = input(l:message)
+  if l:confirm ==# 'y'
+    if l:is_directory
+      call system("rm -rf " . shellescape(l:path))
+    else
+      call system("rm " . shellescape(l:path))
+    endif
+    echo "Deleted: " . l:path
+    NERDTreeRefreshRoot
+  else
+    echo "Deletion cancelled."
+  endif
+endfunction
+
+" Keybinding for deleting files or folders in NERDTree
+autocmd FileType nerdtree nmap <buffer> d :call NERDTreeDeleteNode()<CR>
+
 
 
 " Automatically insert closing brackets
