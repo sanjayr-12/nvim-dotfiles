@@ -11,6 +11,11 @@ Plug 'junegunn/fzf.vim'                                    " Fzf integration wit
 " Theme
 Plug 'morhetz/gruvbox'
 
+"prettier
+Plug 'jose-elias-alvarez/null-ls.nvim'   " Null-ls for formatting and linting
+Plug 'nvim-lua/plenary.nvim'            " Required dependency for null-ls
+
+
 " icons
 Plug 'ryanoasis/vim-devicons'
 
@@ -132,6 +137,11 @@ inoremap [ []<Esc>i
 inoremap " ""<Esc>i
 inoremap ' ''<Esc>i
 
+"prettier
+nnoremap <C-s> :w<CR>
+inoremap <C-s> <Esc>:w<CR>a
+
+
 " Enable nvim-cmp
 lua << EOF
 local cmp = require'cmp'
@@ -185,4 +195,29 @@ for _, server in ipairs(servers) do
   })
 end
 EOF
+
+
+lua << EOF
+local null_ls = require("null-ls")
+
+null_ls.setup({
+  sources = {
+    null_ls.builtins.formatting.prettier.with({
+      filetypes = { "javascript", "typescript", "css", "html", "json", "markdown" },
+    }),
+  },
+  on_attach = function(client, bufnr)
+    if client.supports_method("textDocument/formatting") then
+      -- Format on save
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        buffer = bufnr,
+        callback = function()
+          vim.lsp.buf.format({ bufnr = bufnr })
+        end,
+      })
+    end
+  end,
+})
+EOF
+
 
