@@ -11,6 +11,9 @@ Plug 'junegunn/fzf.vim'                                    " Fzf integration wit
 " Theme
 Plug 'morhetz/gruvbox'
 
+" icons
+Plug 'ryanoasis/vim-devicons'
+
 " nvim-cmp for auto-completion
 Plug 'hrsh7th/nvim-cmp'
 Plug 'hrsh7th/cmp-buffer'
@@ -35,6 +38,10 @@ set expandtab       " Use spaces instead of tabs
 set background=dark " Use dark theme
 colorscheme gruvbox " Set the theme
 set showmatch       " Highlight matching brackets
+
+"encoding
+set encoding=UTF-8
+
 
 " Keymap for NERDTree
 nnoremap <C-f> :NERDTreeToggle<CR>
