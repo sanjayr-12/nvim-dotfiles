@@ -8,12 +8,30 @@ Plug 'tpope/vim-commentary'                                " Easy commenting
 Plug 'junegunn/fzf', { 'do': './install --all' }           " Fuzzy finder
 Plug 'junegunn/fzf.vim'                                    " Fzf integration with Vim
 
+
+"Git highlighting
+Plug 'lewis6991/gitsigns.nvim'     " Git signs for line changes
+Plug 'tpope/vim-fugitive'         " Git commands integration
+
+
 " Theme
 Plug 'morhetz/gruvbox'
 
 "prettier
 Plug 'jose-elias-alvarez/null-ls.nvim'   " Null-ls for formatting and linting
 Plug 'nvim-lua/plenary.nvim'            " Required dependency for null-ls
+
+
+"file tree, that top tabs
+" File Tree Plugin
+Plug 'nvim-tree/nvim-tree.lua'
+
+" Icons for File Tree and Bufferline
+Plug 'nvim-tree/nvim-web-devicons'
+
+" Tabline Plugin for Buffers
+Plug 'akinsho/bufferline.nvim'
+
 
 
 " icons
@@ -46,7 +64,6 @@ set showmatch       " Highlight matching brackets
 
 "encoding
 set encoding=UTF-8
-
 
 " Keymap for NERDTree
 nnoremap <C-f> :NERDTreeToggle<CR>
@@ -142,6 +159,19 @@ nnoremap <C-s> :w<CR>
 inoremap <C-s> <Esc>:w<CR>a
 
 
+"top tree
+" Toggle File Tree
+nnoremap <C-t> :NvimTreeToggle<CR>
+
+" Navigate Between Buffers (Tabs)
+nnoremap <Tab> :BufferLineCycleNext<CR>
+nnoremap <S-Tab> :BufferLineCyclePrev<CR>
+
+" Close the Current Buffer
+nnoremap <C-w> :bd<CR>
+
+
+
 " Enable nvim-cmp
 lua << EOF
 local cmp = require'cmp'
@@ -220,4 +250,116 @@ null_ls.setup({
 })
 EOF
 
+
+
+
+lua << EOF
+-- Import the `nvim-tree` module
+local nvim_tree = require("nvim-tree")
+
+-- Define custom key mappings
+local function my_on_attach(bufnr)
+  local api = require("nvim-tree.api")
+
+  -- Helper function to set key mappings
+  local function opts(desc)
+    return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
+  end
+
+  -- Default key mappings
+  vim.keymap.set('n', '<CR>', api.node.open.edit, opts('Open'))
+  vim.keymap.set('n', 'o', api.node.open.edit, opts('Open'))
+  vim.keymap.set('n', 'v', api.node.open.vertical, opts('Open: Vertical Split'))
+  vim.keymap.set('n', 's', api.node.open.horizontal, opts('Open: Horizontal Split'))
+  vim.keymap.set('n', '<C-t>', api.tree.toggle, opts('Toggle Tree'))
+  vim.keymap.set('n', 'd', api.fs.remove, opts('Delete'))
+end
+
+-- Configure nvim-tree
+nvim_tree.setup({
+  on_attach = my_on_attach,
+  view = {
+    width = 30,
+    side = "left",
+  },
+  renderer = {
+    icons = {
+      show = {
+        file = true,
+        folder = true,
+        folder_arrow = true,
+        git = true,
+      },
+    },
+  },
+})
+EOF
+
+lua << EOF
+require("bufferline").setup({
+  options = {
+    numbers = "ordinal", -- Show buffer numbers
+    close_command = "bdelete! %d", -- Command to close a buffer
+    right_mouse_command = "bdelete! %d", -- Right-click to close
+    left_trunc_marker = "<", -- Truncation symbol for left
+    right_trunc_marker = ">", -- Truncation symbol for right
+    show_close_icon = true, -- Show close icon
+    separator_style = "slant", -- Style of separator between tabs
+    diagnostics = "nvim_lsp", -- Show LSP diagnostics on tabs
+    offsets = {
+      {
+        filetype = "NvimTree",
+        text = "File Explorer",
+        highlight = "Directory",
+        text_align = "center",
+      },
+    },
+  },
+})
+
+-- Keybindings for navigating tabs
+vim.api.nvim_set_keymap("n", "<Tab>", ":BufferLineCycleNext<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<S-Tab>", ":BufferLineCyclePrev<CR>", { noremap = true, silent = true })
+EOF
+
+
+
+
+lua << EOF
+require('gitsigns').setup {
+    signs = {
+        add          = { text = '│' },
+        change       = { text = '│' },
+        delete       = { text = '_' },
+        topdelete    = { text = '‾' },
+        changedelete = { text = '~' },
+    },
+    current_line_blame = true, -- Show inline blame annotations
+    watch_gitdir = { interval = 1000 },
+    sign_priority = 6,
+    update_debounce = 200,
+    max_file_length = 40000, -- Disable for very large files
+}
+
+-- Keymaps for GitSigns
+local gs = require('gitsigns')
+
+vim.keymap.set('n', ']c', function()
+    if vim.wo.diff then return ']c' end
+    vim.schedule(function() gs.next_hunk() end)
+    return '<Ignore>'
+end, { expr = true, desc = "Next Git hunk" })
+
+vim.keymap.set('n', '[c', function()
+    if vim.wo.diff then return '[c' end
+    vim.schedule(function() gs.prev_hunk() end)
+    return '<Ignore>'
+end, { expr = true, desc = "Previous Git hunk" })
+
+vim.keymap.set('n', '<leader>hs', gs.stage_hunk, { desc = "Stage Git hunk" })
+vim.keymap.set('n', '<leader>hr', gs.reset_hunk, { desc = "Reset Git hunk" })
+vim.keymap.set('n', '<leader>hR', gs.reset_buffer, { desc = "Reset Git buffer" })
+vim.keymap.set('n', '<leader>hp', gs.preview_hunk, { desc = "Preview Git hunk" })
+vim.keymap.set('n', '<leader>hb', function() gs.blame_line { full = true } end, { desc = "Blame line" })
+EOF
 
