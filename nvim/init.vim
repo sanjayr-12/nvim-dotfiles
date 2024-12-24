@@ -214,3 +214,21 @@ require('gitsigns').setup {
 }
 EOF
 
+
+" Toggle vertical split with Ctrl+\
+function! ToggleVerticalSplit()
+  " Check if there is only one window open
+  if winnr('$') == 1
+    " Open a vertical split
+    vsplit
+  else
+    " Close the current split
+    quit
+  endif
+endfunction
+
+" Map Ctrl+\ to toggle the vertical split
+nnoremap <C-\> :call ToggleVerticalSplit()<CR>
+
+
+
